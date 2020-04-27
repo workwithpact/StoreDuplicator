@@ -1,4 +1,4 @@
-# Store Duplicator
+# Shopify Store Duplicator
 This tools makes it easy to duplicate a store's content onto another, either to spin up a staging env or to simply test stuff out without risking anything in production.
 
 ## Setting it all up
@@ -37,3 +37,9 @@ By default, simply running `yarn start` will validate that each store is able to
 - Copying products & articles: run `yarn start --products --articles`
 - Copying products, pages & articles: run `yarn start --products --articles --pages`
 - Just copy everything you can: run `yarn start --products --articles --pages --blogs --collections`
+
+## Issues and bugs
+Create a new issue, or issue a new PR on this repo if you've found an issue and would like it fixed.
+
+## License 
+MIT. Do whatever you like with this stuff ✌️.

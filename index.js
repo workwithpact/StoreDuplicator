@@ -35,9 +35,9 @@ const start = async () => {
   const migration = new Migrator(sourceStore, destinationStore, (program.verbosity && program.verbosity * 1)|| 4)
   try {
     await migration.testConnection()
-    console.log('Store configuration looks correct.')
+    migration.log('Store configuration looks correct.')
   } catch (e) {
-    console.log('Could not validate proper store setup', e.message)
+    migration.error('Could not validate proper store setup', e.message)
     process.exit()
   }
   if (program.pages) {
