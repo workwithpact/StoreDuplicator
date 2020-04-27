@@ -1,6 +1,16 @@
 # Shopify Store Duplicator
 This tools makes it easy to duplicate a store's content onto another, either to spin up a staging env or to simply test stuff out without risking anything in production.
 
+## What it supports
+With this tool, you can sync/duplicate the following resources:
+- Products (and their variants, including images, alt tags and images being tied to specific variants as well as metafields)
+- Smart Collections (Along with its image, filters and metafields)
+- Custom Collections (Along with its image, products (mapped using their handle) and metafields)
+- Shop-level metafields
+- Blogs (along with their metafields)
+- Articles (mapped to a blog of the same handle. Comes along with their metafields)
+- Pages (along with their metafields)
+
 ## Setting it all up
 You'll first need to [create 2 private apps](https://help.shopify.com/en/manual/apps/private-apps#generate-credentials-from-the-shopify-admin "Read Shopify's documentation on how to create a private app"). One needs read access on the source store, the other needs read/write on the destination store.
 
