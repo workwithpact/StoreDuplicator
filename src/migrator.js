@@ -94,17 +94,35 @@ class Migrator {
       this.info(`[PAGE ${page.id}] Metafield ${metafield.namespace}.${metafield.key} done!`)
     })
   }
-  async migratePages() {
+  async migratePages(deleteFirst = false) {
     this.log('Page migration started...')
     let params = { limit: 250 }
+    const destinationPages = {}
+    if (deleteFirst) {
+      this.log('Deletion requested... Gathering all of the destination pages first to avoid duplicates.')
+      do {
+        const pages = await this.destination.page.list(params)
+        await this.asyncForEach(pages, async (page) => {
+          destinationPages[page.handle] = page.id
+        })
+        params = pages.nextPageParameters;
+      } while (params !== undefined);
+    }
+    params = { limit: 250 }
     do {
       const pages = await this.source.page.list(params)
       await this.asyncForEach(pages, async (page) => {
+        if (destinationPages[page.handle]) {
+          this.log(`[DUPLICATE PAGE] Deleting destination page ${page.handle}`)
+          await this.destination.page.delete(destinationPages[page.handle])
+        }
         await this._migratePage(page)
       })
       params = pages.nextPageParameters;
     } while (params !== undefined);
     this.log('Page migration finished!')
+  }
+  async migrateBlogs() {
 
   }
 }

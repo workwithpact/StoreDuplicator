@@ -8,6 +8,7 @@ program
   .option('--articles', 'Run the migration for articles')
   .option('--collections', 'Run the migration for collections')
   .option('--pages', 'Run the migration for pages')
+  .option('--delete-pages', 'Delete(replace) pages with the same handles')
   .option('-v, --verbosity', 'Verbosity level. Defaults to 4, as talkative as my MIL.')
 
 program.parse(process.argv);
@@ -34,7 +35,7 @@ const start = async () => {
     process.exit()
   }
   if (program.pages) {
-    await migration.migratePages()
+    await migration.migratePages(program.deletePages)
   }
 }
 start()
