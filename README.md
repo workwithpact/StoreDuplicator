@@ -27,6 +27,8 @@ By default, simply running `yarn start` will validate that each store is able to
 - `--delete-blogs` will override pre-existing articles.
 - `--articles` copies over articles
 - `--delete-articles` will override pre-existing articles.
+- `--metafields` copies over shop metafields
+- `--delete-metafields` will override pre-existing shop metafields.
 
 
 ### Examples
