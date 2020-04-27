@@ -1,5 +1,5 @@
 # Store Duplicator
-This tools makes it easy to duplicate a store's content onto another, foreither to spin up a staging env, or to simply test stuff out without risking anything in production.
+This tools makes it easy to duplicate a store's content onto another, either to spin up a staging env or to simply test stuff out without risking anything in production.
 
 ## Setting it all up
 
