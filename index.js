@@ -6,6 +6,8 @@ program.version('1.0.0');
 program
   .option('--products', 'Run the migration for products')
   .option('--delete-products', 'Delete(replace) products with the same handles')
+  .option('--collections', 'Run the migration for collections')
+  .option('--delete-collections', 'Delete(replace) collections with the same handles')
   .option('--articles', 'Run the migration for articles')
   .option('--delete-articles', 'Delete(replace) articles with the same handles')
   .option('--blogs', 'Run the migration for blogs')
@@ -49,6 +51,9 @@ const start = async () => {
   }
   if (program.products) {
     await migration.migrateProducts(program.deleteProducts)
+  }
+  if (program.collections) {
+    await migration.migrateCollections(program.deleteCollections)
   }
 }
 start()

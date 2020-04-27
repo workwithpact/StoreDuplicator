@@ -18,13 +18,17 @@ By default, simply running `yarn start` will validate that each store is able to
 
 ###  Available flags
 
-`--products` copies over products (and variants, images & metafields)
+- `--products` copies over products (and variants, images & metafields)
+- `--delete-products` will override pre-existing products.
+- `--collections` copies over collections
+- `--delete-collections` will override pre-existing collections.
+- `--pages` copies over pages (along with metafields)
+- `--delete-pages` will override pre-existing pages.
+- `--blogs` copies over blogs
+- `--delete-blogs` will override pre-existing articles.
+- `--articles` copies over articles
+- `--delete-articles` will override pre-existing articles.
 
-`--collections` (todo)
-
-`--pages` copies over pages (along with metafields)
-
-`--articles` copies over articles (along with metafields and their respective blogs)
 
 ### Examples
 
