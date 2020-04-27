@@ -5,6 +5,7 @@ const Migrator = require('./src/migrator.js')
 program.version('1.0.0');
 program
   .option('--products', 'Run the migration for products')
+  .option('--delete-products', 'Delete(replace) products with the same handles')
   .option('--articles', 'Run the migration for articles')
   .option('--delete-articles', 'Delete(replace) articles with the same handles')
   .option('--blogs', 'Run the migration for blogs')
@@ -45,6 +46,9 @@ const start = async () => {
   }
   if (program.articles) {
     await migration.migrateArticles(program.deleteArticles)
+  }
+  if (program.products) {
+    await migration.migrateProducts(program.deleteProducts)
   }
 }
 start()
