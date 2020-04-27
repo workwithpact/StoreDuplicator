@@ -38,7 +38,7 @@ By default, simply running `yarn start` will validate that each store is able to
 - Copying only articles: run `yarn start --articles`
 - Copying products & articles: run `yarn start --products --articles`
 - Copying products, pages & articles: run `yarn start --products --articles --pages`
-- Just copy everything you can: run `yarn start --products --articles --pages --blogs --collections`
+- Just copy everything you can: run `yarn start --products --articles --pages --blogs --collections --metafields`
 
 ## Issues and bugs
 Create a new issue, or issue a new PR on this repo if you've found an issue and would like it fixed.
