@@ -338,7 +338,7 @@ class Migrator {
       await this.asyncForEach(collections, async (collection) => {
         if (destinationCollections[collection.handle] && deleteFirst) {
           this.log(`[DUPLICATE COLLECTION] Deleting destination collection ${collection.handle}`)
-          await this.destination.collection.delete(destinationCollections[collection.handle])
+          await this.destination.smartCollection.delete(destinationCollections[collection.handle])
         }
         if (destinationCollections[collection.handle] && skipExisting && !deleteFirst) {
           this.log(`[EXISTING COLLECTION] Skipping ${collection.handle}`)
@@ -407,7 +407,7 @@ class Migrator {
       await this.asyncForEach(collections, async (collection) => {
         if (destinationCollections[collection.handle] && deleteFirst) {
           this.log(`[DUPLICATE COLLECTION] Deleting destination collection ${collection.handle}`)
-          await this.destination.collection.delete(destinationCollections[collection.handle])
+          await this.destination.customCollection.delete(destinationCollections[collection.handle])
         }
         if (destinationCollections[collection.handle] && skipExisting && !deleteFirst) {
           this.log(`[EXISTING COLLECTION] Skipping ${collection.handle}`)
