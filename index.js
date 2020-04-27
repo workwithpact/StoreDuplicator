@@ -4,6 +4,7 @@ const Migrator = require('./src/migrator.js')
 
 program.version('1.0.0');
 program
+  .option('--all', 'Migrate everything')
   .option('--metafields', 'Run the migration for shop\'s metafields')
   .option('--delete-metafields', 'Delete(replace) shop metafields with the same namespace and key')
   .option('--products', 'Run the migration for products')
@@ -42,23 +43,23 @@ const start = async () => {
     migration.error('Could not validate proper store setup', e.message)
     process.exit()
   }
-  if (program.pages) {
+  if (program.all || program.pages) {
     await migration.migratePages(program.deletePages)
   }
-  if (program.blogs) {
+  if (program.all || program.blogs) {
     await migration.migrateBlogs(program.deleteBlogs)
   }
-  if (program.articles) {
+  if (program.all || program.articles) {
     await migration.migrateArticles(program.deleteArticles)
   }
-  if (program.products) {
+  if (program.all || program.products) {
     await migration.migrateProducts(program.deleteProducts)
   }
-  if (program.collections) {
+  if (program.all || program.collections) {
     await migration.migrateSmartCollections(program.deleteCollections)
     await migration.migrateCustomCollections(program.deleteCollections)
   }
-  if (program.metafields) {
+  if (program.all || program.metafields) {
     await migration.migrateMetafields(program.deleteMetafields)
   }
 }

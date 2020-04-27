@@ -39,6 +39,7 @@ By default, simply running `yarn start` will validate that each store is able to
 - `--delete-articles` will override pre-existing articles.
 - `--metafields` copies over shop metafields
 - `--delete-metafields` will override pre-existing shop metafields.
+- `--all` will sync everything.
 
 
 ### Examples
@@ -48,7 +49,7 @@ By default, simply running `yarn start` will validate that each store is able to
 - Copying only articles: run `yarn start --articles`
 - Copying products & articles: run `yarn start --products --articles`
 - Copying products, pages & articles: run `yarn start --products --articles --pages`
-- Just copy everything you can: run `yarn start --products --articles --pages --blogs --collections --metafields`
+- Just copy everything you can: run `yarn start --all`
 
 ## Issues and bugs
 Create a new issue, or issue a new PR on this repo if you've found an issue and would like it fixed.
