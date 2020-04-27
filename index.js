@@ -4,6 +4,8 @@ const Migrator = require('./src/migrator.js')
 
 program.version('1.0.0');
 program
+  .option('--metafields', 'Run the migration for shop\'s metafields')
+  .option('--delete-metafields', 'Delete(replace) shop metafields with the same namespace and key')
   .option('--products', 'Run the migration for products')
   .option('--delete-products', 'Delete(replace) products with the same handles')
   .option('--collections', 'Run the migration for collections')
@@ -54,6 +56,9 @@ const start = async () => {
   }
   if (program.collections) {
     await migration.migrateSmartCollections(program.deleteCollections)
+  }
+  if (program.metafields) {
+    await migration.migrateMetafields(program.deleteMetafields)
   }
 }
 start()

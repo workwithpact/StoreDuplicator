@@ -253,6 +253,43 @@ class Migrator {
     } while (params !== undefined);
     this.log('Product migration finished!')
   }
+  async migrateMetafields(deleteFirst = false, skipExisting = true) {
+    this.log('Shop Metafields migration started...')
+    const sourceMetafields = []
+    const destinationMetafields = []
+    let params = { limit: 250 }
+    do {
+      const metafields = await this.source.metafield.list(params)
+      metafields.forEach(m => sourceMetafields.push(m))
+      params = metafields.nextPageParameters;
+    } while (params !== undefined);
+
+    params = { limit: 250 }
+    do {
+      const metafields = await this.destination.metafield.list(params)
+      metafields.forEach(m => destinationMetafields.push(m))
+      params = metafields.nextPageParameters;
+    } while (params !== undefined);
+    await this.asyncForEach(sourceMetafields, async (metafield) => {
+      const destinationMetafield = destinationMetafields.find(f => f.key === metafield.key && f.namespace === metafield.namespace)
+      if (destinationMetafield && deleteFirst) {
+        this.log(`[DUPLICATE METAFIELD] Deleting destination metafield ${metafield.namespace}.${metafield.key}`)
+        await this.destination.metafield.delete(destinationMetafield.id)
+      }
+      if (destinationMetafield && skipExisting && !deleteFirst) {
+        this.log(`[EXISTING METAFIELD] Skipping ${metafield.namespace}.${metafield.key}`)
+        return
+      }
+      try {
+        delete metafield.owner_id
+        delete metafield.owner_resource
+        await this.destination.metafield.create(metafield)
+      } catch (e) {
+        this.error(`[METAFIELD] ${metafield.namespace}.${metafield.key} FAILED TO BE CREATED PROPERLY.`)
+      }
+    })
+    this.log('Shop Metafields migration finished!')
+  }
 
   async migrateSmartCollections(deleteFirst = false, skipExisting = true) {
     this.log('Smart Collections migration started...')
