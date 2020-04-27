@@ -166,6 +166,9 @@ class Migrator {
     const images = (product.images || []).map(v => v)
     delete product.images;
     (product.variants || []).forEach((variant, i) => {
+      if (variant.compare_at_price && (variant.compare_at_price * 1) <= (variant.price * 1)) {
+        delete product.variants[i].compare_at_price
+      } 
       delete product.variants[i].image_id
     })
     const newProduct = await this.destination.product.create(product)
