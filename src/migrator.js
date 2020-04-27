@@ -128,6 +128,36 @@ class Migrator {
     })
   }
 
+  async _migrateCustomCollection(collection, productMap = {}) {
+    this.info(`[CUSTOM COLLECTION ${collection.id}] ${collection.handle} started...`)
+    const metafields = await this._getMetafields('custom_collection', collection.id)
+    const products = []
+    let params = { limit: 250 }
+    do {
+      const sourceProducts = await this.source.collection.products(collection.id, params)
+      sourceProducts.forEach(p => products.push(p))
+      params = sourceProducts.nextPageParameters;
+    } while (params !== undefined);
+    this.info(`[CUSTOM COLLECTION ${collection.id}] has ${products.length} products...`)
+    this.info(`[CUSTOM COLLECTION ${collection.id}] has ${metafields.length} metafields...`)
+    delete collection.publications
+    collection.collects = products.map(p => productMap[p.id] || null).filter(p => p).map((p) => {
+      return {
+        product_id: p
+      }
+    })
+    const newCollection = await this.destination.customCollection.create(collection)
+    this.info(`[CUSTOM COLLECTION ${collection.id}] duplicated. New id is ${newCollection.id}.`)
+    await this.asyncForEach(metafields, async (metafield) => {
+      delete metafield.id
+      metafield.owner_resource = 'custom_collection'
+      metafield.owner_id = newCollection.id
+      this.info(`[CUSTOM COLLECTION ${collection.id}] Metafield ${metafield.namespace}.${metafield.key} started`)
+      await this.destination.metafield.create(metafield)
+      this.info(`[CUSTOM COLLECTION ${collection.id}] Metafield ${metafield.namespace}.${metafield.key} done!`)
+    })
+  }
+
   async _migrateProduct(product) {
     this.info(`[PRODUCT ${product.id}] ${product.handle} started...`)
     const metafields = await this._getMetafields('product', product.id)
@@ -323,6 +353,75 @@ class Migrator {
       params = collections.nextPageParameters;
     } while (params !== undefined);
     this.log('Smart Collection migration finished!')
+  }
+
+  async migrateCustomCollections(deleteFirst = false, skipExisting = true) {
+    this.log('Custom Collections migration started...')
+    let params = { limit: 250 }
+    const destinationCollections = {}
+    const productMap = {}
+    const sourceProducts = []
+    const destinationProducts = []
+
+    do {
+      const products = await this.source.product.list(params)
+      products.forEach(p => sourceProducts.push(p))
+      params = products.nextPageParameters;
+    } while (params !== undefined);
+
+    params = { limit: 250 }
+    do {
+      const products = await this.destination.product.list(params)
+      products.forEach(p => destinationProducts.push(p))
+      params = products.nextPageParameters;
+    } while (params !== undefined);
+
+    destinationProducts.forEach(p => {
+      const sourceProduct = sourceProducts.find(s => s.handle === p.handle)
+      if (sourceProduct) {
+        productMap[sourceProduct.id] = p.id
+      }
+    })
+
+    params = { limit: 250 }
+    do {
+      const collections = await this.destination.smartCollection.list(params)
+      await this.asyncForEach(collections, async (collection) => {
+        destinationCollections[collection.handle] = collection.id
+      })
+      params = collections.nextPageParameters;
+    } while (params !== undefined);
+    params = { limit: 250 }
+
+
+    do {
+      const collections = await this.destination.customCollection.list(params)
+      await this.asyncForEach(collections, async (collection) => {
+        destinationCollections[collection.handle] = collection.id
+      })
+      params = collections.nextPageParameters;
+    } while (params !== undefined);
+    params = { limit: 250 }
+    do {
+      const collections = await this.source.customCollection.list(params)
+      await this.asyncForEach(collections, async (collection) => {
+        if (destinationCollections[collection.handle] && deleteFirst) {
+          this.log(`[DUPLICATE COLLECTION] Deleting destination collection ${collection.handle}`)
+          await this.destination.collection.delete(destinationCollections[collection.handle])
+        }
+        if (destinationCollections[collection.handle] && skipExisting && !deleteFirst) {
+          this.log(`[EXISTING COLLECTION] Skipping ${collection.handle}`)
+          return
+        }
+        try {
+          await this._migrateCustomCollection(collection, productMap)
+        } catch (e) {
+          this.error(`[COLLECTION] ${collection.handle} FAILED TO BE CREATED PROPERLY.`, e)
+        }
+      })
+      params = collections.nextPageParameters;
+    } while (params !== undefined);
+    this.log('Custom Collection migration finished!')
   }
 
   async migrateBlogs(deleteFirst = false, skipExisting = true) {

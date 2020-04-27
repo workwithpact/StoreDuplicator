@@ -56,6 +56,7 @@ const start = async () => {
   }
   if (program.collections) {
     await migration.migrateSmartCollections(program.deleteCollections)
+    await migration.migrateCustomCollections(program.deleteCollections)
   }
   if (program.metafields) {
     await migration.migrateMetafields(program.deleteMetafields)
