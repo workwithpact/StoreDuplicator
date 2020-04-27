@@ -53,7 +53,7 @@ const start = async () => {
     await migration.migrateProducts(program.deleteProducts)
   }
   if (program.collections) {
-    await migration.migrateCollections(program.deleteCollections)
+    await migration.migrateSmartCollections(program.deleteCollections)
   }
 }
 start()

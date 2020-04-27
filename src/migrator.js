@@ -111,6 +111,23 @@ class Migrator {
     })
   }
 
+  async _migrateSmartCollection(collection) {
+    this.info(`[SMART COLLECTION ${collection.id}] ${collection.handle} started...`)
+    const metafields = await this._getMetafields('smart_collection', collection.id)
+    this.info(`[SMART COLLECTION ${collection.id}] has ${metafields.length} metafields...`)
+    delete collection.publications
+    const newCollection = await this.destination.smartCollection.create(collection)
+    this.info(`[SMART COLLECTION ${collection.id}] duplicated. New id is ${newCollection.id}.`)
+    await this.asyncForEach(metafields, async (metafield) => {
+      delete metafield.id
+      metafield.owner_resource = 'smart_collection'
+      metafield.owner_id = newCollection.id
+      this.info(`[SMART COLLECTION ${collection.id}] Metafield ${metafield.namespace}.${metafield.key} started`)
+      await this.destination.metafield.create(metafield)
+      this.info(`[SMART COLLECTION ${collection.id}] Metafield ${metafield.namespace}.${metafield.key} done!`)
+    })
+  }
+
   async _migrateProduct(product) {
     this.info(`[PRODUCT ${product.id}] ${product.handle} started...`)
     const metafields = await this._getMetafields('product', product.id)
@@ -235,6 +252,40 @@ class Migrator {
       params = products.nextPageParameters;
     } while (params !== undefined);
     this.log('Product migration finished!')
+  }
+
+  async migrateSmartCollections(deleteFirst = false, skipExisting = true) {
+    this.log('Smart Collections migration started...')
+    let params = { limit: 250 }
+    const destinationCollections = {}
+    do {
+      const collections = await this.destination.smartCollection.list(params)
+      await this.asyncForEach(collections, async (collection) => {
+        destinationCollections[collection.handle] = collection.id
+      })
+      params = collections.nextPageParameters;
+    } while (params !== undefined);
+    params = { limit: 250 }
+    do {
+      const collections = await this.source.smartCollection.list(params)
+      await this.asyncForEach(collections, async (collection) => {
+        if (destinationCollections[collection.handle] && deleteFirst) {
+          this.log(`[DUPLICATE COLLECTION] Deleting destination collection ${collection.handle}`)
+          await this.destination.collection.delete(destinationCollections[collection.handle])
+        }
+        if (destinationCollections[collection.handle] && skipExisting && !deleteFirst) {
+          this.log(`[EXISTING COLLECTION] Skipping ${collection.handle}`)
+          return
+        }
+        try {
+          await this._migrateSmartCollection(collection)
+        } catch (e) {
+          this.error(`[COLLECTION] ${collection.handle} FAILED TO BE CREATED PROPERLY.`)
+        }
+      })
+      params = collections.nextPageParameters;
+    } while (params !== undefined);
+    this.log('Smart Collection migration finished!')
   }
 
   async migrateBlogs(deleteFirst = false, skipExisting = true) {
