@@ -11,3 +11,25 @@ Here are the access copes that will be required:
 - Theme templates and theme assets
 
 Then, you will need to create a `.env` file (copy it from `.env.example`) and fill it out with the right api information you will have gathered from the private apps process.
+
+## Usage
+
+By default, simply running `yarn start` will validate that each store is able to be read from. It will not do anything unless specifically told to using flags.
+
+###  Available flags
+
+`--products` copies over products (and variants, images & metafields)
+
+`--collections` (todo)
+
+`--pages` copies over pages (along with metafields)
+
+`--articles` copies over articles (along with metafields and their respective blogs)
+
+### Examples
+
+- Copying only product: run `yarn start --products`
+- Copying only pages: run `yarn start --pages`
+- Copying only articles: run `yarn start --articles`
+- Copying products & articles: run `yarn start --products --articles`
+- Copying products, pages & articles: run `yarn start --products --articles --pages`
