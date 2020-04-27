@@ -2,8 +2,7 @@
 This tools makes it easy to duplicate a store's content onto another, either to spin up a staging env or to simply test stuff out without risking anything in production.
 
 ## Setting it all up
-
-You'll first need to create 2 private apps. One needs read access on the source store, the other needs read/write on the destination store.
+You'll first need to [create 2 private apps](https://help.shopify.com/en/manual/apps/private-apps#generate-credentials-from-the-shopify-admin "Read Shopify's documentation on how to create a private app"). One needs read access on the source store, the other needs read/write on the destination store.
 
 Here are the access copes that will be required:
 - Store content like articles, blogs, comments, pages, and redirects
@@ -37,3 +36,4 @@ By default, simply running `yarn start` will validate that each store is able to
 - Copying only articles: run `yarn start --articles`
 - Copying products & articles: run `yarn start --products --articles`
 - Copying products, pages & articles: run `yarn start --products --articles --pages`
+- Just copy everything you can: run `yarn start --products --articles --pages --blogs --collections`
