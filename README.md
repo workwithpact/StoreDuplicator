@@ -1,5 +1,5 @@
 # Shopify Store Duplicator
-This tools makes it easy to duplicate a store's content onto another, either to spin up a staging env or to simply test stuff out without risking anything in production.
+This tool makes it easy to duplicate a store's content onto another, either to spin up a staging env or to simply test stuff out without risking anything in production.
 
 ## What it supports
 With this tool, you can sync/duplicate the following resources:
@@ -17,7 +17,6 @@ You'll first need to [create 2 private apps](https://help.shopify.com/en/manual/
 Here are the access copes that will be required:
 - Store content like articles, blogs, comments, pages, and redirects
 - Products, variants and collections
-- Theme templates and theme assets
 
 Then, you will need to create a `.env` file (copy it from `.env.example`) and fill it out with the right api information you will have gathered from the private apps process.
 
