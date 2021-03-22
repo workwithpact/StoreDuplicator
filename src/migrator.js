@@ -168,7 +168,10 @@ class Migrator {
     (product.variants || []).forEach((variant, i) => {
       if (variant.compare_at_price && (variant.compare_at_price * 1) <= (variant.price * 1)) {
         delete product.variants[i].compare_at_price
-      } 
+      }
+      /*reset fulfillment services to shopify*/
+      delete variant.fulfillment_service
+      variant.inventory_management = 'shopify'
       delete product.variants[i].image_id
     })
     const newProduct = await this.destination.product.create(product)
