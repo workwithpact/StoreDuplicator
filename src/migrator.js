@@ -40,6 +40,7 @@ class Migrator {
   }
   async testConnection() {
     const sourceScopes = await this.source.accessScope.list()
+    // console.log('xx')
     const destinationScopes = await this.destination.accessScope.list()
     this.requiredScopes.source.forEach((scopes) => {
       const scopeFound = !!sourceScopes.find(scope => scopes.indexOf(scope.handle) !== -1)
@@ -58,9 +59,15 @@ class Migrator {
       }
     })
   }
-  async asyncForEach(array, callback) {
+  async asyncForEach(array, callback, concurrency = 1) {
+    const promises = [];
+
     for (let index = 0; index < array.length; index++) {
-      await callback(array[index], index, array);
+      promises.push(async () => await callback(array[index], index, array));
+    }
+    for (let i = 0; i < promises.length; i += concurrency) {
+      const chunk = promises.slice(i, i + concurrency);
+      await Promise.all(chunk.map(f => f()));
     }
   }
   async _getMetafields(resource = null, id = null) {
@@ -160,7 +167,7 @@ class Migrator {
 
   async _migrateProduct(product) {
     this.info(`[PRODUCT ${product.id}] ${product.handle} started...`)
-    const metafields = await this._getMetafields('product', product.id)
+    const metafields = await (await this._getMetafields('product', product.id)).filter(m => m.namespace.indexOf('app--') !== 0)
     this.info(`[PRODUCT ${product.id}] has ${metafields.length} metafields...`)
     product.metafields = metafields
     const images = (product.images || []).map(v => v)
@@ -174,6 +181,9 @@ class Migrator {
       variant.inventory_management = 'shopify'
       delete product.variants[i].image_id
     })
+    if (product.metafields) {
+      product.metafields = product.metafields.filter(m => m.namespace.indexOf('app--') !== 0)
+    }
     const newProduct = await this.destination.product.create(product)
     this.info(`[PRODUCT ${product.id}] duplicated. New id is ${newProduct.id}.`)
     this.info(`[PRODUCT ${product.id}] Creating ${images && images.length || 0} images...`)
@@ -196,14 +206,6 @@ class Migrator {
         }
       })
     }
-    await this.asyncForEach(metafields, async (metafield) => {
-      delete metafield.id
-      metafield.owner_resource = 'product'
-      metafield.owner_id = newProduct.id
-      this.info(`[PRODUCT ${product.id}] Metafield ${metafield.namespace}.${metafield.key} started`)
-      await this.destination.metafield.create(metafield)
-      this.info(`[PRODUCT ${product.id}] Metafield ${metafield.namespace}.${metafield.key} done!`)
-    })
   }
 
   async _migrateArticle(blogId, article) {
@@ -213,6 +215,7 @@ class Migrator {
     delete article.user_id
     delete article.created_at
     delete article.deleted_at
+    article.published_at = article.created_at
     article.blog_id = blogId
     const newArticle = await this.destination.article.create(blogId, article)
     this.info(`[ARTICLE ${article.id}] duplicated. New id is ${newArticle.id}.`)
@@ -280,11 +283,11 @@ class Migrator {
           return
         }
         try {
-          await this._migrateProduct(product)
+            await this._migrateProduct(product)
         } catch (e) {
-          this.error(`[PRODUCT] ${product.handle} FAILED TO BE CREATED PROPERLY.`)
+          this.error(`[PRODUCT] ${product.handle} FAILED TO BE CREATED PROPERLY.`, e.response.body)
         }
-      })
+      }, 15)
       params = products.nextPageParameters;
     } while (params !== undefined);
     this.log('Product migration finished!')
