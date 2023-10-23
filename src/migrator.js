@@ -1,14 +1,29 @@
 const Shopify = require('shopify-api-node');
-
+const fs = require('fs');
 class Migrator {
-  constructor(sourceStore, destinationStore, verbosity = 4) {
+  constructor(sourceStore, destinationStore, verbosity = 4, saveData) {
     this.config = {
       source: sourceStore,
       destination: destinationStore
     }
+    this.saveData = !!saveData
     this.verbosity = verbosity
     this.source = new Shopify(sourceStore);
     this.destination = new Shopify(destinationStore);
+    if (this.saveData) {
+      const types = ['products', 'pages', 'metafields', 'collections', 'articles', 'blogs']
+      types.forEach(type => {
+        const dir = `data/${type}`
+        if (fs.existsSync(dir)) {
+          return
+        }
+        try {
+          fs.mkdirSync(dir, { recursive: true})
+        } catch (e) {
+          this.error(`Could not adequately create folder ${dir}`)
+        }
+      })
+    }
     this.requiredScopes = {
       source: [ // For source, we only need read access, but won't discriminate against write access.
         ['read_content', 'write_content'], // Blogs, Articles, Pages
@@ -169,7 +184,7 @@ class Migrator {
     this.info(`[PRODUCT ${product.id}] ${product.handle} started...`)
     const metafields = await (await this._getMetafields('product', product.id)).filter(m => m.namespace.indexOf('app--') !== 0)
     this.info(`[PRODUCT ${product.id}] has ${metafields.length} metafields...`)
-    product.metafields = metafields
+    product.metafields = metafields.filter(v => v && v.value && v.value.indexOf && v.value.indexOf('gid://shopify/') === -1).filter(v => v.namespace.indexOf('app--') !== 0);
     const images = (product.images || []).map(v => v)
     delete product.images;
     (product.variants || []).forEach((variant, i) => {
@@ -244,6 +259,8 @@ class Migrator {
     do {
       const pages = await this.source.page.list(params)
       await this.asyncForEach(pages, async (page) => {
+        this.saveData && fs.writeFileSync(`data/pages/${page.id}.json`, JSON.stringify(page));
+
         if (destinationPages[page.handle] && deleteFirst) {
           this.log(`[DUPLICATE PAGE] Deleting destination page ${page.handle}`)
           await this.destination.page.delete(destinationPages[page.handle])
@@ -283,9 +300,10 @@ class Migrator {
           return
         }
         try {
-            await this._migrateProduct(product)
+          this.saveData && fs.writeFileSync(`data/products/${product.id}.json`, JSON.stringify(product));
+          await this._migrateProduct(product)
         } catch (e) {
-          this.error(`[PRODUCT] ${product.handle} FAILED TO BE CREATED PROPERLY.`, e.response.body)
+          this.error(`[PRODUCT] ${product.handle} FAILED TO BE CREATED PROPERLY.`,e, e.response, product.metafields)
         }
       }, 15)
       params = products.nextPageParameters;
@@ -310,6 +328,7 @@ class Migrator {
       params = metafields.nextPageParameters;
     } while (params !== undefined);
     await this.asyncForEach(sourceMetafields, async (metafield) => {
+      this.saveData && fs.writeFileSync(`data/metafields/${metafield.id}.json`, JSON.stringify(metafield));
       const destinationMetafield = destinationMetafields.find(f => f.key === metafield.key && f.namespace === metafield.namespace)
       if (destinationMetafield && deleteFirst) {
         this.log(`[DUPLICATE METAFIELD] Deleting destination metafield ${metafield.namespace}.${metafield.key}`)
@@ -345,6 +364,7 @@ class Migrator {
     do {
       const collections = await this.source.smartCollection.list(params)
       await this.asyncForEach(collections, async (collection) => {
+        this.saveData && fs.writeFileSync(`data/collections/${collection.id}.json`, JSON.stringify(collection));
         if (destinationCollections[collection.handle] && deleteFirst) {
           this.log(`[DUPLICATE COLLECTION] Deleting destination collection ${collection.handle}`)
           await this.destination.smartCollection.delete(destinationCollections[collection.handle])
@@ -414,6 +434,7 @@ class Migrator {
     do {
       const collections = await this.source.customCollection.list(params)
       await this.asyncForEach(collections, async (collection) => {
+        this.saveData && fs.writeFileSync(`data/collections/${collection.id}.json`, JSON.stringify(collection));
         if (destinationCollections[collection.handle] && deleteFirst) {
           this.log(`[DUPLICATE COLLECTION] Deleting destination collection ${collection.handle}`)
           await this.destination.customCollection.delete(destinationCollections[collection.handle])
@@ -448,6 +469,8 @@ class Migrator {
     do {
       const blogs = await this.source.blog.list(params)
       await this.asyncForEach(blogs, async (blog) => {
+        this.saveData && fs.writeFileSync(`data/blogs/${blog.id}.json`, JSON.stringify(blog));
+
         if (destinationBlogs[blog.handle] && deleteFirst) {
           this.log(`[DUPLICATE blog] Deleting destination blog ${blog.handle}`)
           await this.destination.blog.delete(destinationBlogs[blog.handle])
@@ -488,6 +511,7 @@ class Migrator {
       do {
         const articles = await this.source.article.list(blog.id, params)
         await this.asyncForEach(articles, async (article) => {
+          this.saveData && fs.writeFileSync(`data/articles/${article.id}.json`, JSON.stringify(article));
           if (destinationArticles[article.handle] && deleteFirst) {
             this.log(`[DUPLICATE article] Deleting destination article ${article.handle}`)
             await this.destination.article.delete(destinationBlog.id, destinationArticles[article.handle])
