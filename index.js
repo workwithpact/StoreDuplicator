@@ -27,11 +27,13 @@ program.parse(process.argv);
 const start = async () => {
   const sourceStore = {
     shopName: process.env.SOURCE_SHOPIFY_STORE,
+    autoLimit: true,
     accessToken: process.env.SOURCE_SHOPIFY_API_PASSWORD,
     apiVersion: '2023-10'
   }
   const destinationStore = {
     shopName: process.env.DESTINATION_SHOPIFY_STORE,
+    autoLimit: true,
     accessToken: process.env.DESTINATION_SHOPIFY_API_PASSWORD,
     apiVersion: '2023-10'
   }
